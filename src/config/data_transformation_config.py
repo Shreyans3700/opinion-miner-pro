@@ -26,6 +26,7 @@ class DataTransformationConfig:
 
     artifacts_dir: str = "artifacts"
     vectorizer_file_name: str = "vectorizer.pkl"
+    label_encoder_file_name: str = "label_encoder.pkl"
     x_train_file_name: str = "X_train.npz"
     x_test_file_name: str = "X_test.npz"
     y_train_file_name: str = "y_train.npy"
@@ -39,6 +40,10 @@ class DataTransformationConfig:
     @property
     def vectorizer_path(self) -> str:
         return str(Path(self.artifacts_dir) / self.vectorizer_file_name)
+
+    @property
+    def label_encoder_path(self) -> str:
+        return str(Path(self.artifacts_dir) / self.label_encoder_file_name)
 
     @property
     def x_train_path(self) -> str:

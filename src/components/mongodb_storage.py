@@ -12,15 +12,15 @@ from pymongo.errors import PyMongoError
 
 from src.components.data_preprocessing import DataPreprocessing
 from src.config.data_preprocessing_config import DataPreprocessingConfig
-from src.config.mongodb_data_exchange_config import MongoDBDataExchangeConfig
+from src.config.mongodb_storage_config import MongoDBStorageConfig
 from src.utils.exception import CustomException
 from src.utils.logger import logging
 
 
-class MongoDBDataExchange:
-    """Exchange large files between local workspace and MongoDB GridFS."""
+class MongoDBStorage:
+    """Manage file storage roundtrips between local workspace and MongoDB GridFS."""
 
-    def __init__(self, config: MongoDBDataExchangeConfig) -> None:
+    def __init__(self, config: MongoDBStorageConfig) -> None:
         self.config = config
 
     def download_raw_csv(self) -> str:
@@ -31,7 +31,9 @@ class MongoDBDataExchange:
             local_path.parent.mkdir(parents=True, exist_ok=True)
 
             with local_path.open("wb") as file_obj:
-                bucket.download_to_stream_by_name(self.config.raw_csv_gridfs_filename, file_obj)
+                bucket.download_to_stream_by_name(
+                    self.config.raw_csv_gridfs_filename, file_obj
+                )
 
             logging.info(
                 "Downloaded GridFS file '%s' to '%s'.",
@@ -51,7 +53,9 @@ class MongoDBDataExchange:
                 raise FileNotFoundError(f"Parquet file not found: {source_path}")
 
             if self.config.replace_existing_cleaned_file:
-                for grid_out in bucket.find({"filename": self.config.cleaned_parquet_gridfs_filename}):
+                for grid_out in bucket.find(
+                    {"filename": self.config.cleaned_parquet_gridfs_filename}
+                ):
                     bucket.delete(grid_out._id)
 
             with source_path.open("rb") as file_obj:
@@ -100,3 +104,7 @@ class MongoDBDataExchange:
             return GridFSBucket(db, bucket_name=self.config.bucket_name)
         except PyMongoError as error:
             raise CustomException(error, sys) from error
+
+
+# Backward-compatible alias.
+MongoDBDataExchange = MongoDBStorage

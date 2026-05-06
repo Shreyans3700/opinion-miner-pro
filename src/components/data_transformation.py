@@ -9,72 +9,43 @@ from typing import Any
 import joblib
 import numpy as np
 import pandas as pd
-from gridfs import GridFSBucket
-from pymongo import MongoClient
-from pymongo.errors import PyMongoError
 from scipy.sparse import save_npz
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
 
 from src.config.data_transformation_config import DataTransformationConfig
-from src.config.mongodb_data_exchange_config import MongoDBDataExchangeConfig
 from src.utils.exception import CustomException
 from src.utils.logger import logging
-from src.utils.mongo_uri import normalize_mongo_uri
 
 
 class DataTransformation:
-    """Load cleaned parquet from MongoDB and build model-ready features."""
+    """Build model-ready features from cleaned parquet."""
 
-    def __init__(
-        self,
-        transformation_config: DataTransformationConfig,
-        mongo_config: MongoDBDataExchangeConfig,
-    ) -> None:
+    def __init__(self, transformation_config: DataTransformationConfig) -> None:
         self.transformation_config = transformation_config
-        self.mongo_config = mongo_config
 
-    def run(self) -> dict[str, str]:
-        """Execute MongoDB download -> transform -> save artifacts workflow."""
+    def run(self, parquet_path: str | None = None) -> dict[str, str]:
+        """Execute load -> transform -> save artifacts workflow."""
         try:
-            parquet_path = self.download_cleaned_parquet_from_mongodb()
-            df = self.load_cleaned_dataframe(parquet_path)
+            input_path = parquet_path or self.transformation_config.local_input_path
+            df = self.load_cleaned_dataframe(input_path)
             self.validate_schema(df)
 
             transformed = self.transform_dataframe(df)
             artifact_paths = self.save_transformed_artifacts(*transformed)
 
-            artifact_paths["input_parquet_path"] = parquet_path
+            artifact_paths["input_parquet_path"] = input_path
             logging.info("Data transformation completed successfully.")
             return artifact_paths
-        except Exception as error:
-            raise CustomException(error, sys) from error
-
-    def download_cleaned_parquet_from_mongodb(self) -> str:
-        """Download cleaned parquet file from MongoDB GridFS."""
-        try:
-            local_path = Path(self.transformation_config.local_input_path)
-            local_path.parent.mkdir(parents=True, exist_ok=True)
-
-            bucket = self._get_bucket()
-            with local_path.open("wb") as file_obj:
-                bucket.download_to_stream_by_name(
-                    self.mongo_config.cleaned_parquet_gridfs_filename,
-                    file_obj,
-                )
-
-            logging.info(
-                "Downloaded cleaned parquet '%s' from MongoDB to '%s'.",
-                self.mongo_config.cleaned_parquet_gridfs_filename,
-                local_path,
-            )
-            return str(local_path)
         except Exception as error:
             raise CustomException(error, sys) from error
 
     def load_cleaned_dataframe(self, parquet_path: str) -> pd.DataFrame:
         """Load cleaned parquet dataframe from local path."""
         try:
+            if not Path(parquet_path).exists():
+                raise FileNotFoundError(f"Parquet file not found: {parquet_path}")
             df = pd.read_parquet(parquet_path)
             if df.empty:
                 raise ValueError("Cleaned parquet is empty.")
@@ -100,17 +71,26 @@ class DataTransformation:
 
     def transform_dataframe(
         self, df: pd.DataFrame
-    ) -> tuple[Any, Any, np.ndarray, np.ndarray, TfidfVectorizer]:
-        """Split data and build TF-IDF train/test matrices."""
+    ) -> tuple[Any, Any, np.ndarray, np.ndarray, TfidfVectorizer, LabelEncoder]:
+        """Split data and build TF-IDF train/test matrices with encoded labels."""
         try:
-            text_series = df[self.transformation_config.text_column].fillna("").astype(str)
-            label_series = df[self.transformation_config.label_column].astype(str)
+            text_series = (
+                df[self.transformation_config.text_column].fillna("").astype(str)
+            )
+            label_series = (
+                df[self.transformation_config.label_column].fillna("").astype(str)
+            )
 
-            stratify_target = label_series if self.transformation_config.stratify_split else None
+            label_encoder = LabelEncoder()
+            encoded_labels = label_encoder.fit_transform(label_series)
+
+            stratify_target = (
+                encoded_labels if self.transformation_config.stratify_split else None
+            )
 
             X_train_text, X_test_text, y_train, y_test = train_test_split(
                 text_series,
-                label_series,
+                encoded_labels,
                 test_size=self.transformation_config.test_size,
                 random_state=self.transformation_config.random_state,
                 stratify=stratify_target,
@@ -129,7 +109,7 @@ class DataTransformation:
             X_train = vectorizer.fit_transform(X_train_text)
             X_test = vectorizer.transform(X_test_text)
 
-            return X_train, X_test, y_train.to_numpy(), y_test.to_numpy(), vectorizer
+            return X_train, X_test, y_train, y_test, vectorizer, label_encoder
         except Exception as error:
             raise CustomException(error, sys) from error
 
@@ -140,8 +120,9 @@ class DataTransformation:
         y_train: np.ndarray,
         y_test: np.ndarray,
         vectorizer: TfidfVectorizer,
+        label_encoder: LabelEncoder,
     ) -> dict[str, str]:
-        """Save TF-IDF matrices, labels, and vectorizer artifacts."""
+        """Save TF-IDF matrices, labels, and reusable transformation artifacts."""
         try:
             artifacts_dir = Path(self.transformation_config.artifacts_dir)
             artifacts_dir.mkdir(parents=True, exist_ok=True)
@@ -151,6 +132,7 @@ class DataTransformation:
             np.save(self.transformation_config.y_train_path, y_train)
             np.save(self.transformation_config.y_test_path, y_test)
             joblib.dump(vectorizer, self.transformation_config.vectorizer_path)
+            joblib.dump(label_encoder, self.transformation_config.label_encoder_path)
 
             logging.info("Saved transformed artifacts under '%s'.", artifacts_dir)
             return {
@@ -159,15 +141,7 @@ class DataTransformation:
                 "y_train_path": self.transformation_config.y_train_path,
                 "y_test_path": self.transformation_config.y_test_path,
                 "vectorizer_path": self.transformation_config.vectorizer_path,
+                "label_encoder_path": self.transformation_config.label_encoder_path,
             }
         except Exception as error:
-            raise CustomException(error, sys) from error
-
-    def _get_bucket(self) -> GridFSBucket:
-        """Create MongoDB GridFS bucket from configured DB details."""
-        try:
-            client = MongoClient(normalize_mongo_uri(self.mongo_config.mongo_uri))
-            db = client[self.mongo_config.database_name]
-            return GridFSBucket(db, bucket_name=self.mongo_config.bucket_name)
-        except PyMongoError as error:
             raise CustomException(error, sys) from error

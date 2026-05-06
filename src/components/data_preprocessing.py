@@ -69,15 +69,19 @@ class DataPreprocessing:
                 sys,
             )
 
-    def preprocess_dataframe(self, df: pd.DataFrame, strict_non_empty: bool = True) -> pd.DataFrame:
+    def preprocess_dataframe(
+        self, df: pd.DataFrame, strict_non_empty: bool = True
+    ) -> pd.DataFrame:
         """Apply text normalization and build model-ready dataframe."""
         try:
             output_df = df.copy()
-            output_df[self.config.text_column] = output_df[self.config.text_column].fillna("")
+            output_df[self.config.text_column] = output_df[
+                self.config.text_column
+            ].fillna("")
 
-            output_df[self.config.output_text_column] = output_df[self.config.text_column].map(
-                self.preprocess_text
-            )
+            output_df[self.config.output_text_column] = output_df[
+                self.config.text_column
+            ].map(self.preprocess_text)
 
             if self.config.drop_empty_rows:
                 output_df = output_df[
@@ -123,13 +127,17 @@ class DataPreprocessing:
             )
 
             for chunk_idx, chunk in enumerate(
-                pd.read_csv(self.config.raw_data_path, chunksize=self.config.batch_size),
+                pd.read_csv(
+                    self.config.raw_data_path, chunksize=self.config.batch_size
+                ),
                 start=1,
             ):
                 if chunk_idx == 1:
                     self.validate_schema(chunk)
 
-                processed_chunk = self.preprocess_dataframe(chunk, strict_non_empty=False)
+                processed_chunk = self.preprocess_dataframe(
+                    chunk, strict_non_empty=False
+                )
                 if processed_chunk.empty:
                     logging.info("Skipping empty processed chunk=%s", chunk_idx)
                     continue
@@ -189,7 +197,11 @@ class DataPreprocessing:
         """Download and initialize NLTK resources required for preprocessing."""
         try:
             self._download_nltk_resources_if_needed()
-            self._stop_words = set(stopwords.words("english")) if self.config.remove_stopwords else set()
+            self._stop_words = (
+                set(stopwords.words("english"))
+                if self.config.remove_stopwords
+                else set()
+            )
             self._lemmatizer = WordNetLemmatizer() if self.config.lemmatize else None
         except Exception as error:
             raise CustomException(error, sys) from error

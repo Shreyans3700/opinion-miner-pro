@@ -8,13 +8,15 @@ import sys
 from pathlib import Path
 
 if __package__ is None or __package__ == "":
-    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
+    sys.path.append(
+        os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+    )
 
 from gridfs import GridFSBucket
 from pymongo import MongoClient
 from pymongo.errors import PyMongoError
 
-from src.config.mongodb_data_exchange_config import MongoDBDataExchangeConfig
+from src.config.mongodb_storage_config import MongoDBStorageConfig
 from src.utils.env_loader import load_project_env
 from src.utils.exception import CustomException
 from src.utils.logger import logging
@@ -23,11 +25,11 @@ from src.utils.mongo_uri import normalize_mongo_uri
 load_project_env()
 
 
-class MongoDBCSVUploader:
+class MongoDBStorageUploader:
     """Uploads CSV files into MongoDB GridFS."""
 
-    def __init__(self, config: MongoDBDataExchangeConfig | None = None) -> None:
-        self.config = config or MongoDBDataExchangeConfig()
+    def __init__(self, config: MongoDBStorageConfig | None = None) -> None:
+        self.config = config or MongoDBStorageConfig()
 
     def upload_csv(
         self,
@@ -56,7 +58,7 @@ class MongoDBCSVUploader:
                     file_obj,
                     metadata={
                         "contentType": "text/csv",
-                        "source": "mongodb_csv_uploader",
+                        "source": "mongodb_storage_uploader",
                         "original_local_path": str(source_path),
                     },
                 )
@@ -106,16 +108,25 @@ def _parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-if __name__ == "__main__":
+def main() -> None:
+    """CLI entrypoint for uploading CSV file to MongoDB GridFS."""
     args = _parse_args()
-    config = MongoDBDataExchangeConfig()
+    config = MongoDBStorageConfig()
     if args.mongo_uri:
         config.mongo_uri = normalize_mongo_uri(args.mongo_uri)
 
-    uploader = MongoDBCSVUploader(config=config)
+    uploader = MongoDBStorageUploader(config=config)
     uploaded_file_id = uploader.upload_csv(
         csv_path=args.csv_path,
         gridfs_filename=args.gridfs_filename,
         replace_existing=not args.no_replace_existing,
     )
     print(f"uploaded_file_id={uploaded_file_id}")
+
+
+# Backward-compatible alias.
+MongoDBCSVUploader = MongoDBStorageUploader
+
+
+if __name__ == "__main__":
+    main()

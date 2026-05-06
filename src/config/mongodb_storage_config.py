@@ -1,4 +1,4 @@
-"""Configuration for MongoDB raw/cleaned file exchange."""
+"""Configuration for MongoDB raw/cleaned file storage and exchange."""
 
 from dataclasses import dataclass, field
 from os import getenv
@@ -10,8 +10,8 @@ load_project_env()
 
 
 @dataclass
-class MongoDBDataExchangeConfig:
-    """Dataclass config for MongoDB GridFS file exchange."""
+class MongoDBStorageConfig:
+    """Dataclass config for MongoDB GridFS storage."""
 
     mongo_uri: str = field(
         default_factory=lambda: normalize_mongo_uri(
@@ -26,3 +26,7 @@ class MongoDBDataExchangeConfig:
 
     cleaned_parquet_gridfs_filename: str = "reviews_cleaned.parquet"
     replace_existing_cleaned_file: bool = True
+
+
+# Backward-compatible alias.
+MongoDBDataExchangeConfig = MongoDBStorageConfig
