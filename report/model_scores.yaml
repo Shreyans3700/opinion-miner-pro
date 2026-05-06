@@ -1,0 +1,45 @@
+primary_metric: f1_weighted
+best_model:
+  name: LogisticRegression
+  score: 0.90593054
+  artifact_path: artifacts\model.pkl
+  estimator: LogisticRegression
+  best_params:
+    C: 5.00000000
+    class_weight: balanced
+models:
+  LogisticRegression:
+    cv_best_score: 0.90262108
+    test_accuracy: 0.90593162
+    test_precision_weighted: 0.90595025
+    test_recall_weighted: 0.90593162
+    test_f1_weighted: 0.90593054
+    best_params:
+      C: 5.00000000
+      class_weight: balanced
+  LinearSVC:
+    cv_best_score: 0.90218651
+    test_accuracy: 0.90591912
+    test_precision_weighted: 0.90594381
+    test_recall_weighted: 0.90591912
+    test_f1_weighted: 0.90591768
+    best_params:
+      C: 0.10000000
+  MultinomialNB:
+    cv_best_score: 0.87224415
+    test_accuracy: 0.87301706
+    test_precision_weighted: 0.87302088
+    test_recall_weighted: 0.87301706
+    test_f1_weighted: 0.87301674
+    best_params:
+      alpha: 0.10000000
+  SGDClassifier:
+    cv_best_score: 0.88697629
+    test_accuracy: 0.88623039
+    test_precision_weighted: 0.88623197
+    test_recall_weighted: 0.88623039
+    test_f1_weighted: 0.88623027
+    best_params:
+      alpha: 0.00010000
+      loss: hinge
+      penalty: l2

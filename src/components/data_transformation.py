@@ -125,7 +125,9 @@ class DataTransformation:
         """Save TF-IDF matrices, labels, and reusable transformation artifacts."""
         try:
             artifacts_dir = Path(self.transformation_config.artifacts_dir)
+            transformed_data_dir = Path(self.transformation_config.transformed_data_dir)
             artifacts_dir.mkdir(parents=True, exist_ok=True)
+            transformed_data_dir.mkdir(parents=True, exist_ok=True)
 
             save_npz(self.transformation_config.x_train_path, X_train)
             save_npz(self.transformation_config.x_test_path, X_test)
@@ -134,7 +136,11 @@ class DataTransformation:
             joblib.dump(vectorizer, self.transformation_config.vectorizer_path)
             joblib.dump(label_encoder, self.transformation_config.label_encoder_path)
 
-            logging.info("Saved transformed artifacts under '%s'.", artifacts_dir)
+            logging.info(
+                "Saved transformed data under '%s' and artifacts under '%s'.",
+                transformed_data_dir,
+                artifacts_dir,
+            )
             return {
                 "x_train_path": self.transformation_config.x_train_path,
                 "x_test_path": self.transformation_config.x_test_path,

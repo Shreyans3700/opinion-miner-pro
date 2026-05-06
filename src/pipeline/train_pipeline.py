@@ -5,6 +5,7 @@ Flow:
 2) Local preprocessing
 3) Cleaned parquet upload to MongoDB
 4) Transformation + artifact persistence for reuse
+5) Multi-model training + best model persistence + score report generation
 """
 
 from __future__ import annotations
@@ -20,31 +21,35 @@ if __package__ is None or __package__ == "":
 
 from src.components.data_preprocessing import DataPreprocessing
 from src.components.data_transformation import DataTransformation
+from src.components.model_training import ModelTraining
 from src.components.mongodb_storage import MongoDBStorage
 from src.config.data_preprocessing_config import DataPreprocessingConfig
 from src.config.data_transformation_config import DataTransformationConfig
+from src.config.model_training_config import ModelTrainingConfig
 from src.config.mongodb_storage_config import MongoDBStorageConfig
 from src.utils.exception import CustomException
 from src.utils.logger import logging
 
 
 class TrainPipeline:
-    """Single training data pipeline with an explicit four-step flow."""
+    """Single training data pipeline with an explicit five-step flow."""
 
     def __init__(
         self,
         mongo_config: MongoDBStorageConfig | None = None,
         preprocessing_config: DataPreprocessingConfig | None = None,
         transformation_config: DataTransformationConfig | None = None,
+        model_training_config: ModelTrainingConfig | None = None,
     ) -> None:
         self.mongo_config = mongo_config or MongoDBStorageConfig()
         self.preprocessing_config = preprocessing_config or DataPreprocessingConfig()
         self.transformation_config = transformation_config or DataTransformationConfig()
+        self.model_training_config = model_training_config or ModelTrainingConfig()
 
     def run(self) -> dict[str, Any]:
         """Run full training data preparation flow and return outputs."""
         try:
-            logging.info("Starting simplified train pipeline.")
+            logging.info("Starting train pipeline.")
             mongo_storage = MongoDBStorage(self.mongo_config)
 
             raw_csv_local_path = mongo_storage.download_raw_csv()
@@ -56,6 +61,9 @@ class TrainPipeline:
             transformation_outputs = DataTransformation(self.transformation_config).run(
                 cleaned_path
             )
+            training_outputs = ModelTraining(self.model_training_config).run(
+                transformation_outputs
+            )
 
             result = {
                 "preprocessing": {
@@ -64,8 +72,9 @@ class TrainPipeline:
                     "cleaned_gridfs_file_id": cleaned_file_id,
                 },
                 "transformation": transformation_outputs,
+                "model_training": training_outputs,
             }
-            logging.info("Simplified train pipeline completed.")
+            logging.info("Train pipeline completed.")
             return result
         except Exception as error:
             raise CustomException(error, sys) from error

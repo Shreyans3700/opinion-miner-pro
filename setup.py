@@ -1,5 +1,6 @@
 from setuptools import setup, find_packages
 
+
 # Read requirements from requirements.txt
 def get_requirements(file_path: str):
     requirements = []
@@ -19,13 +20,9 @@ setup(
     author="Shreyansh Pandey",
     author_email="pandeyshreyansh46@gmail.com",
     description="Aspect-based sentiment analysis system for extracting insights from reviews",
-    
     packages=find_packages(),
-
     install_requires=get_requirements("requirements.txt"),
-
     python_requires=">=3.8",
-
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",

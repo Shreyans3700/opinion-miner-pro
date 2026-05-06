@@ -24,6 +24,7 @@ class DataTransformationConfig:
     tfidf_min_df: int = 2
     tfidf_max_df: float = 0.95
 
+    transformed_data_dir: str = "data/transformed"
     artifacts_dir: str = "artifacts"
     vectorizer_file_name: str = "vectorizer.pkl"
     label_encoder_file_name: str = "label_encoder.pkl"
@@ -47,16 +48,16 @@ class DataTransformationConfig:
 
     @property
     def x_train_path(self) -> str:
-        return str(Path(self.artifacts_dir) / self.x_train_file_name)
+        return str(Path(self.transformed_data_dir) / self.x_train_file_name)
 
     @property
     def x_test_path(self) -> str:
-        return str(Path(self.artifacts_dir) / self.x_test_file_name)
+        return str(Path(self.transformed_data_dir) / self.x_test_file_name)
 
     @property
     def y_train_path(self) -> str:
-        return str(Path(self.artifacts_dir) / self.y_train_file_name)
+        return str(Path(self.transformed_data_dir) / self.y_train_file_name)
 
     @property
     def y_test_path(self) -> str:
-        return str(Path(self.artifacts_dir) / self.y_test_file_name)
+        return str(Path(self.transformed_data_dir) / self.y_test_file_name)

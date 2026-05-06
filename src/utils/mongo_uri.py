@@ -27,4 +27,6 @@ def normalize_mongo_uri(uri: str) -> str:
         safe_userinfo = quote_plus(unquote_plus(userinfo))
 
     safe_netloc = f"{safe_userinfo}@{hostinfo}"
-    return urlunsplit((parts.scheme, safe_netloc, parts.path, parts.query, parts.fragment))
+    return urlunsplit(
+        (parts.scheme, safe_netloc, parts.path, parts.query, parts.fragment)
+    )
