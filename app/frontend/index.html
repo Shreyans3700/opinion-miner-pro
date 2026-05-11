@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Opinion Miner UI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css?v=5">
+</head>
+<body>
+  <div class="bg-orb orb-a"></div>
+  <div class="bg-orb orb-b"></div>
+  <div class="bg-grid"></div>
+
+  <main class="app-shell">
+    <header class="glass topbar">
+      <div class="brand">
+        <p class="eyebrow">Sentiment Intelligence</p>
+        <h1>Opinion Miner</h1>
+      </div>
+      <div class="status-badges">
+        <span class="badge">API: FastAPI</span>
+        <span class="badge">Task: Aspect Sentiment</span>
+      </div>
+    </header>
+
+    <section class="layout">
+      <aside class="glass rail">
+        <h2>Control Rail</h2>
+        <label class="field">
+          <span>API Key</span>
+          <div class="inline">
+            <input id="apiKeyInput" type="password" placeholder="Enter x-api-key value">
+            <button id="saveKeyBtn" type="button">Save</button>
+          </div>
+        </label>
+        <p class="muted">Requests use current origin with header <code>x-api-key</code>.</p>
+        <div id="globalMessage" class="message hidden"></div>
+
+        <nav class="tabs" aria-label="Sections">
+          <button class="tab active" data-tab="analyse">Analyse</button>
+          <button class="tab" data-tab="bulk">BulkAnalyse</button>
+          <button class="tab" data-tab="train">Train</button>
+        </nav>
+
+        <section class="samples">
+          <p class="samples-title">Quick Samples</p>
+          <button class="ghost sample-btn" data-sample="Camera is amazing but battery drains fast.">Camera vs Battery</button>
+          <button class="ghost sample-btn" data-sample="Sprouts.ai has a great product but it has many bugs.">Product vs Bugs</button>
+        </section>
+      </aside>
+
+      <section class="stage">
+        <section id="analyse" class="glass panel tab-panel active">
+          <div class="panel-head big">
+            <h2>Analyse Single Review</h2>
+            <p>Generate overall tone, feature-level signals, and confidence curves.</p>
+          </div>
+          <label class="field">
+            <span>Review Text</span>
+            <textarea id="reviewInput" rows="6" placeholder="Type a review..."></textarea>
+          </label>
+          <div class="actions">
+            <button id="analyseBtn" type="button">Analyse</button>
+          </div>
+          <div id="analyseMessage" class="message hidden"></div>
+          <div id="analyseResult" class="result hidden"></div>
+        </section>
+
+        <section id="bulk" class="glass panel tab-panel">
+          <div class="panel-head">
+            <h2>BulkAnalyse CSV</h2>
+            <p>Upload reviews and view results with sentiment analysis.</p>
+          </div>
+          <div class="form-grid">
+            <label class="field">
+              <span>CSV File</span>
+              <input id="bulkFileInput" type="file" accept=".csv,text/csv">
+            </label>
+            <label class="field">
+              <span>Text Column</span>
+              <input id="textColumnInput" type="text" placeholder="review">
+            </label>
+          </div>
+          <div class="actions">
+            <button id="bulkBtn" type="button">Run BulkAnalyse</button>
+            <button id="exportBulkBtn" type="button" class="secondary hidden">Export CSV</button>
+          </div>
+          <div id="bulkMessage" class="message hidden"></div>
+          <div id="bulkResults" class="bulk-results hidden">
+            <div class="bulk-header">
+              <span id="bulkCount"></span>
+              <div class="pagination">
+                <button id="prevPageBtn" type="button">&larr; Prev</button>
+                <span id="pageInfo"></span>
+                <button id="nextPageBtn" type="button">Next &rarr;</button>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table class="bulk-table">
+                <thead>
+                  <tr>
+                    <th>Review</th>
+                    <th>Sentiment</th>
+                  </tr>
+                </thead>
+                <tbody id="bulkTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section id="train" class="glass panel tab-panel">
+          <div class="panel-head">
+            <h2>Train Pipeline</h2>
+            <p>Rebuild data artifacts, retrain model candidates, and refresh best model.</p>
+          </div>
+          <div class="actions">
+            <button id="trainBtn" type="button">Run Training</button>
+          </div>
+          <div id="trainMessage" class="message hidden"></div>
+          <details id="trainDetails" class="json-box hidden">
+            <summary>Training Output</summary>
+            <pre id="trainOutput"></pre>
+          </details>
+        </section>
+      </section>
+    </section>
+    
+    <footer class="foot-note">Tip: Contrast connectors like <code>but</code> and <code>however</code> improve aspect extraction quality.</footer>
+  </main>
+
+  <script src="/static/app.js?v=5"></script>
+</body>
+</html>

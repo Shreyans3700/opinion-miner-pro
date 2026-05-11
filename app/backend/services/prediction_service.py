@@ -5,6 +5,9 @@ from __future__ import annotations
 from typing import Any
 
 from src.pipeline.predict_pipeline import PredictPipeline
+from src.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class PredictionService:
@@ -15,7 +18,10 @@ class PredictionService:
 
     def predict_one(self, review: str) -> dict[str, Any]:
         """Run inference for a single review."""
-        return self._pipeline.run(review)
+        logger.info("Running prediction for review: %s...", review[:100])
+        result = self._pipeline.run(review)
+        logger.info("Prediction complete: %s", result.get("overall_sentiment", result.get("predicted_label", "")))
+        return result
 
     def predict_many(self, reviews: list[str]) -> list[dict[str, Any]]:
         """Run inference for multiple reviews."""
