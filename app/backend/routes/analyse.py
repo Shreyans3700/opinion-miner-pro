@@ -37,6 +37,7 @@ def get_train_service() -> TrainService:
 def analyse(payload: AnalyseRequest) -> dict[str, Any]:
     """Analyse a single review and return inference observations."""
     try:
+        logger = get_logger(__name__)
         logger.info("Received single review analysis request")
         result = get_prediction_service().predict_one(payload.review)
         logger.info("Single review analysis complete")
