@@ -299,7 +299,7 @@ async function handleBulkAnalyse() {
   formData.append("file", file);
   formData.append("text_column", textColumn);
   formData.append("page", "1");
-  formData.append("per_page", "50");
+  formData.append("per_page", "10");
 
   setLoading("bulkBtn", true, "Processing...");
   try {
@@ -427,7 +427,7 @@ async function changeBulkPage(delta) {
   formData.append("file", file);
   formData.append("text_column", textColumn);
   formData.append("page", String(newPage));
-  formData.append("per_page", "50");
+  formData.append("per_page", "10");
 
   try {
     const response = await fetch("/bulkAnalyseResults", {

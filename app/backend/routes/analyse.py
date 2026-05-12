@@ -72,7 +72,7 @@ async def bulk_analyse_results(
     file: UploadFile = File(...),
     text_column: str = Form(...),
     page: int = Form(1),
-    per_page: int = Form(50),
+    per_page: int = Form(10),
 ) -> dict[str, Any]:
     """Analyse reviews from uploaded CSV and return paginated JSON results."""
     logger = get_logger(__name__)
