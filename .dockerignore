@@ -1,0 +1,9 @@
+.git
+__pycache__
+*.pyc
+data/raw.csv
+data/cleaned/
+data/transformed/
+logs/
+.env
+*.egg-info

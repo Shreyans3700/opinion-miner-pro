@@ -76,7 +76,9 @@ async def bulk_analyse_results(
 ) -> dict[str, Any]:
     """Analyse reviews from uploaded CSV and return paginated JSON results."""
     logger = get_logger(__name__)
-    logger.info("Starting bulk analysis: file=%s, text_column=%s", file.filename, text_column)
+    logger.info(
+        "Starting bulk analysis: file=%s, text_column=%s", file.filename, text_column
+    )
     if not text_column.strip():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -126,7 +128,9 @@ async def bulk_analyse_results(
             results.append(
                 {
                     "review": value,
-                    "overall_sentiment": result.get("overall_sentiment", result.get("predicted_label", "")),
+                    "overall_sentiment": result.get(
+                        "overall_sentiment", result.get("predicted_label", "")
+                    ),
                     "positive_score": result.get("positive_score", 0),
                     "negative_score": result.get("negative_score", 0),
                     "confidence": result.get("confidence", 0),
@@ -149,7 +153,9 @@ async def bulk_analyse_results(
     start = (page - 1) * per_page
     end = start + per_page
     paginated_results = results[start:end]
-    logger.info("Bulk analysis complete: total=%d, returned=%d", total, len(paginated_results))
+    logger.info(
+        "Bulk analysis complete: total=%d, returned=%d", total, len(paginated_results)
+    )
 
     return {
         "total": total,
@@ -166,7 +172,11 @@ async def bulk_analyse(
 ) -> StreamingResponse:
     """Analyse reviews from uploaded CSV and return a downloadable CSV."""
     logger = get_logger(__name__)
-    logger.info("Starting bulk analyse (CSV download): file=%s, text_column=%s", file.filename, text_column)
+    logger.info(
+        "Starting bulk analyse (CSV download): file=%s, text_column=%s",
+        file.filename,
+        text_column,
+    )
     if not text_column.strip():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -272,7 +282,9 @@ async def bulk_analyse(
     merged_df = pd.concat([output_df.reset_index(drop=True), prediction_df], axis=1)
 
     csv_bytes = merged_df.to_csv(index=False).encode("utf-8")
-    logger.info("Bulk analyse (CSV download) complete: %d rows processed", len(predictions))
+    logger.info(
+        "Bulk analyse (CSV download) complete: %d rows processed", len(predictions)
+    )
     return StreamingResponse(
         io.BytesIO(csv_bytes),
         media_type="text/csv",
@@ -310,13 +322,19 @@ def train() -> dict[str, Any]:
 def flatten_prediction_for_csv(observation: dict[str, Any]) -> dict[str, Any]:
     """Convert nested prediction observations to CSV-friendly scalar fields."""
     features_list = observation.get("main_feature_points", [])
-    features_str = ", ".join(
-        f"{fp.get('feature', 'unknown')}: {fp.get('sentiment', 'unknown')}"
-        for fp in features_list
-    ) if features_list else ""
+    features_str = (
+        ", ".join(
+            f"{fp.get('feature', 'unknown')}: {fp.get('sentiment', 'unknown')}"
+            for fp in features_list
+        )
+        if features_list
+        else ""
+    )
 
     return {
-        "overall_sentiment": observation.get("overall_sentiment", observation.get("predicted_label", "")),
+        "overall_sentiment": observation.get(
+            "overall_sentiment", observation.get("predicted_label", "")
+        ),
         "positive_score": observation.get("positive_score", 0),
         "negative_score": observation.get("negative_score", 0),
         "confidence": observation.get("confidence", 0),

@@ -12,4 +12,3 @@ class TrainResponse(BaseModel):
 
     status: str
     outputs: dict[str, Any]
-

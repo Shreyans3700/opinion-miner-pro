@@ -9,6 +9,7 @@ from typing import Any
 
 import joblib
 import numpy as np
+import spacy
 import yaml
 
 from src.components.data_preprocessing import DataPreprocessing
@@ -33,6 +34,7 @@ class Prediction:
         self._model: Any | None = None
         self._label_encoder: Any | None = None
         self._keyword_config = self._load_keyword_config()
+        self._nlp = self._load_spacy_model()
 
     def run(self, sentence: str) -> dict[str, Any]:
         """Predict sentiment from input sentence and return observations."""
@@ -74,7 +76,9 @@ class Prediction:
                 observations["negative_score"] = float(
                     sentiment_breakdown.get("negative", 0.0)
                 )
-            observations["overall_sentiment"] = predicted_label
+            observations["overall_sentiment"] = self._apply_neutral_threshold(
+                predicted_label, observations
+            )
             observations.update(self._predict_aspect_sentiments(sentence))
             observations["word_sentiments"] = self._predict_word_sentiments(tokens)
             return observations
@@ -293,6 +297,18 @@ class Prediction:
             merged[key] = value
         return merged
 
+    @staticmethod
+    def _load_spacy_model():
+        """Load spaCy English model, downloading if needed."""
+        model_name = "en_core_web_sm"
+        try:
+            return spacy.load(model_name, disable=["ner", "textcat"])
+        except OSError:
+            from spacy.cli import download
+
+            download(model_name)
+            return spacy.load(model_name, disable=["ner", "textcat"])
+
     def _decode_label(self, predicted_value: Any) -> str:
         """Decode model output to original class label if encoder is available."""
         if self._label_encoder is None:
@@ -382,7 +398,111 @@ class Prediction:
         return float(1.0 / (1.0 + np.exp(-value)))
 
     def _predict_aspect_sentiments(self, sentence: str) -> dict[str, Any]:
-        """Heuristically derive aspect-level sentiments by clause-level inference."""
+        """Extract aspect-opinion pairs using spaCy dependency parsing."""
+        doc = self._nlp(sentence)
+        positive_cues, negative_cues = self._sentiment_cue_sets()
+        all_cues = positive_cues | negative_cues
+        banned = set(self._keyword_config.get("banned_aspect_tokens", []))
+        preferred = set(self._keyword_config.get("preferred_features", []))
+
+        # Extract (aspect_token, opinion_span) pairs from dependency tree
+        aspect_opinions: list[tuple[str, str]] = []
+        for token in doc:
+            # Look for nouns/proper nouns that are subjects or objects
+            if token.pos_ not in ("NOUN", "PROPN"):
+                continue
+            if token.text.lower() in banned:
+                continue
+            if len(token.text) < 3:
+                continue
+
+            # Find opinion modifiers attached to this noun
+            opinion_tokens = []
+            # Direct adjectival modifiers (amod): "great camera"
+            for child in token.children:
+                if child.dep_ in ("amod", "acomp") and child.pos_ == "ADJ":
+                    opinion_tokens.append(child.text.lower())
+            # Check if noun is subject of a copular/verb construction
+            # e.g., "battery is terrible" -> battery(nsubj) -> is -> terrible(acomp)
+            if token.dep_ in ("nsubj", "nsubjpass"):
+                head = token.head
+                for child in head.children:
+                    if child.dep_ in ("acomp", "attr") and child.pos_ == "ADJ":
+                        opinion_tokens.append(child.text.lower())
+                    # "battery drains quickly" -> verb itself is the signal
+                    if child == token:
+                        continue
+                if head.pos_ == "VERB" and head.lemma_.lower() in all_cues:
+                    opinion_tokens.append(head.lemma_.lower())
+
+            if opinion_tokens:
+                aspect_opinions.append((token.lemma_.lower(), " ".join(opinion_tokens)))
+            elif token.lemma_.lower() in preferred:
+                # Preferred feature with no direct modifier — use surrounding clause
+                aspect_opinions.append((token.lemma_.lower(), ""))
+
+        # Deduplicate aspects, keeping first occurrence
+        seen_aspects: set[str] = set()
+        unique_pairs: list[tuple[str, str]] = []
+        for aspect, opinion in aspect_opinions:
+            if aspect not in seen_aspects:
+                seen_aspects.add(aspect)
+                unique_pairs.append((aspect, opinion))
+
+        # If spaCy found nothing, fall back to simple clause splitting
+        if not unique_pairs:
+            return self._fallback_clause_aspects(sentence)
+
+        aspect_sentiments: dict[str, str] = {}
+        aspect_sentiment_scores: dict[str, dict[str, float]] = {}
+        main_feature_points: list[dict[str, Any]] = []
+
+        for aspect, opinion in unique_pairs:
+            # Determine sentiment from opinion words + model
+            context = opinion if opinion else aspect
+            cleaned = self._preprocessor.preprocess_text(context)
+            if not cleaned:
+                cleaned = aspect
+
+            clause_embedding = self._vectorizer.transform([cleaned])
+            predicted = self._model.predict(clause_embedding)[0]
+            label = self._decode_label(predicted)
+            detail = self._probability_or_score_observations(clause_embedding)
+            breakdown = self._build_sentiment_breakdown(detail)
+            label, breakdown = self._apply_clause_polarity_rules(
+                cleaned, label, breakdown
+            )
+
+            aspect_sentiments[aspect] = label
+            if breakdown:
+                aspect_sentiment_scores[aspect] = {
+                    "positive": float(breakdown.get("positive", 0.0)),
+                    "negative": float(breakdown.get("negative", 0.0)),
+                }
+            main_feature_points.append(
+                {
+                    "feature": aspect,
+                    "sentiment": label,
+                    "evidence": opinion or aspect,
+                    "scores": (
+                        {
+                            "positive": float(breakdown.get("positive", 0.0)),
+                            "negative": float(breakdown.get("negative", 0.0)),
+                        }
+                        if breakdown
+                        else None
+                    ),
+                }
+            )
+
+        return {
+            "aspect_sentiments": aspect_sentiments,
+            "aspect_sentiment_scores": aspect_sentiment_scores,
+            "main_feature_points": main_feature_points,
+        }
+
+    def _fallback_clause_aspects(self, sentence: str) -> dict[str, Any]:
+        """Fallback: split on conjunctions when spaCy finds no aspect-opinion pairs."""
         clause_candidates = [
             part.strip()
             for part in re.split(
@@ -405,9 +525,7 @@ class Prediction:
 
         for idx, clause in enumerate(clause_candidates, start=1):
             cleaned_clause = self._preprocessor.preprocess_text(clause)
-            if not cleaned_clause:
-                continue
-            if not self._has_sentiment_signal(cleaned_clause):
+            if not cleaned_clause or not self._has_sentiment_signal(cleaned_clause):
                 continue
 
             aspect_name = self._extract_aspect_name(clause, cleaned_clause, idx)
@@ -511,7 +629,9 @@ class Prediction:
             if token in bug_features:
                 return token
 
-        preferred_hits = [token for token in filtered_tokens if token in preferred_features]
+        preferred_hits = [
+            token for token in filtered_tokens if token in preferred_features
+        ]
         if preferred_hits:
             return preferred_hits[-1]
 
@@ -578,13 +698,27 @@ class Prediction:
         }
 
         positive_score_cues = sum(
-            positive_weights.get(token, 1.0) for token in tokens if token in positive_cues
+            positive_weights.get(token, 1.0)
+            for token in tokens
+            if token in positive_cues
         )
         negative_score_cues = sum(
-            negative_weights.get(token, 1.0) for token in tokens if token in negative_cues
+            negative_weights.get(token, 1.0)
+            for token in tokens
+            if token in negative_cues
         )
 
         if positive_score_cues == negative_score_cues:
+            # No clear signal — check if model confidence is also low
+            threshold = float(
+                self._keyword_config.get("neutral_confidence_threshold", 0.6)
+            )
+            if breakdown:
+                max_score = max(
+                    breakdown.get("positive", 0), breakdown.get("negative", 0)
+                )
+                if max_score < threshold:
+                    return "neutral", breakdown
             return label, breakdown
 
         if negative_score_cues > positive_score_cues:
@@ -618,6 +752,20 @@ class Prediction:
         positive_cues = set(self._keyword_config.get("positive_cues", []))
         negative_cues = set(self._keyword_config.get("negative_cues", []))
         return positive_cues, negative_cues
+
+    def _apply_neutral_threshold(self, label: str, observations: dict[str, Any]) -> str:
+        """Return 'neutral' if confidence is below the configured threshold."""
+        threshold = float(self._keyword_config.get("neutral_confidence_threshold", 0.6))
+        confidence = observations.get("confidence")
+        if confidence is not None and confidence < threshold:
+            return "neutral"
+        # Fallback: check sentiment breakdown spread
+        breakdown = observations.get("sentiment_breakdown")
+        if breakdown and abs(
+            breakdown.get("positive", 0) - breakdown.get("negative", 0)
+        ) < (1 - threshold):
+            return "neutral"
+        return label
 
     @staticmethod
     def _scores_from_label(label: str) -> dict[str, float]:

@@ -1,3 +1,6 @@
+# Sentiment keyword configuration for aspect-level polarity overrides.
+# Expanded from VADER lexicon + SentiWordNet common terms.
+
 positive_cues:
   - good
   - great
@@ -15,6 +18,114 @@ positive_cues:
   - appreciate
   - quick
   - fast
+  - wonderful
+  - fantastic
+  - superb
+  - outstanding
+  - brilliant
+  - exceptional
+  - magnificent
+  - marvelous
+  - terrific
+  - splendid
+  - delightful
+  - pleasant
+  - enjoyable
+  - satisfying
+  - remarkable
+  - impressive
+  - flawless
+  - elegant
+  - beautiful
+  - gorgeous
+  - stunning
+  - comfortable
+  - convenient
+  - intuitive
+  - responsive
+  - durable
+  - sturdy
+  - solid
+  - lightweight
+  - portable
+  - versatile
+  - efficient
+  - powerful
+  - crisp
+  - sharp
+  - vibrant
+  - bright
+  - premium
+  - luxurious
+  - affordable
+  - worth
+  - bargain
+  - recommend
+  - recommended
+  - favorite
+  - favourite
+  - pleased
+  - happy
+  - glad
+  - satisfied
+  - exceeded
+  - surpassed
+  - upgrade
+  - improved
+  - innovative
+  - seamless
+  - effortless
+  - user-friendly
+  - friendly
+  - helpful
+  - polite
+  - courteous
+  - professional
+  - prompt
+  - speedy
+  - swift
+  - instant
+  - accurate
+  - precise
+  - consistent
+  - dependable
+  - trustworthy
+  - generous
+  - spacious
+  - roomy
+  - quiet
+  - silent
+  - sleek
+  - stylish
+  - modern
+  - compact
+  - handy
+  - practical
+  - functional
+  - robust
+  - stable
+  - secure
+  - safe
+  - refreshing
+  - exciting
+  - fun
+  - entertaining
+  - engaging
+  - addictive
+  - phenomenal
+  - incredible
+  - unbelievable
+  - extraordinary
+  - top-notch
+  - first-rate
+  - world-class
+  - superior
+  - ideal
+  - spotless
+  - immaculate
+  - pristine
+  - genuine
+  - authentic
 
 negative_cues:
   - bad
@@ -35,6 +146,122 @@ negative_cues:
   - bugs
   - bug
   - hard
+  - awful
+  - horrible
+  - dreadful
+  - atrocious
+  - abysmal
+  - pathetic
+  - mediocre
+  - subpar
+  - inferior
+  - disappointing
+  - disappointed
+  - frustrating
+  - frustrated
+  - annoying
+  - annoyed
+  - irritating
+  - useless
+  - worthless
+  - waste
+  - garbage
+  - trash
+  - junk
+  - cheap
+  - flimsy
+  - fragile
+  - defective
+  - faulty
+  - malfunctioning
+  - malfunction
+  - unreliable
+  - inconsistent
+  - unstable
+  - crash
+  - crashes
+  - crashing
+  - freeze
+  - freezes
+  - freezing
+  - glitch
+  - glitchy
+  - laggy
+  - sluggish
+  - unresponsive
+  - clunky
+  - bulky
+  - heavy
+  - noisy
+  - loud
+  - uncomfortable
+  - painful
+  - confusing
+  - complicated
+  - difficult
+  - cumbersome
+  - awkward
+  - ugly
+  - hideous
+  - outdated
+  - obsolete
+  - overpriced
+  - expensive
+  - ripoff
+  - scam
+  - misleading
+  - deceptive
+  - false
+  - fake
+  - counterfeit
+  - damaged
+  - scratched
+  - dented
+  - stained
+  - leaked
+  - leaking
+  - leak
+  - cracked
+  - chipped
+  - peeling
+  - rusted
+  - corroded
+  - stink
+  - stinks
+  - smell
+  - smelly
+  - disgusting
+  - gross
+  - nasty
+  - rude
+  - unprofessional
+  - incompetent
+  - unhelpful
+  - ignored
+  - neglected
+  - refund
+  - return
+  - returned
+  - regret
+  - hate
+  - hated
+  - dislike
+  - avoid
+  - warning
+  - beware
+  - underwhelming
+  - lackluster
+  - bland
+  - boring
+  - dull
+  - lifeless
+  - weak
+  - dim
+  - blurry
+  - pixelated
+  - distorted
+  - tinny
+  - muffled
 
 positive_weights:
   good: 1.2
@@ -53,6 +280,71 @@ positive_weights:
   appreciate: 1.0
   quick: 0.9
   fast: 0.6
+  wonderful: 1.5
+  fantastic: 1.5
+  superb: 1.6
+  outstanding: 1.6
+  brilliant: 1.5
+  exceptional: 1.6
+  magnificent: 1.6
+  marvelous: 1.5
+  terrific: 1.4
+  splendid: 1.4
+  delightful: 1.3
+  pleasant: 1.0
+  enjoyable: 1.1
+  satisfying: 1.1
+  remarkable: 1.3
+  impressive: 1.3
+  flawless: 1.7
+  elegant: 1.2
+  beautiful: 1.3
+  gorgeous: 1.4
+  stunning: 1.4
+  comfortable: 1.1
+  convenient: 1.0
+  intuitive: 1.2
+  responsive: 1.1
+  durable: 1.1
+  sturdy: 1.1
+  solid: 1.0
+  lightweight: 0.8
+  portable: 0.8
+  versatile: 1.0
+  efficient: 1.1
+  powerful: 1.2
+  crisp: 1.0
+  sharp: 1.0
+  vibrant: 1.1
+  bright: 0.8
+  premium: 1.2
+  luxurious: 1.3
+  affordable: 1.1
+  worth: 1.0
+  bargain: 1.1
+  recommend: 1.3
+  recommended: 1.3
+  favorite: 1.2
+  favourite: 1.2
+  pleased: 1.2
+  happy: 1.2
+  satisfied: 1.1
+  exceeded: 1.4
+  surpassed: 1.4
+  innovative: 1.2
+  seamless: 1.3
+  effortless: 1.2
+  phenomenal: 1.7
+  incredible: 1.6
+  extraordinary: 1.6
+  superior: 1.4
+  ideal: 1.2
+  robust: 1.1
+  stable: 1.0
+  secure: 1.0
+  exciting: 1.2
+  fun: 1.0
+  engaging: 1.1
 
 negative_weights:
   bad: 1.2
@@ -73,13 +365,95 @@ negative_weights:
   bugs: 1.8
   bug: 1.8
   hard: 1.0
+  awful: 1.6
+  horrible: 1.6
+  dreadful: 1.6
+  atrocious: 1.8
+  abysmal: 1.8
+  pathetic: 1.6
+  mediocre: 1.0
+  subpar: 1.2
+  inferior: 1.3
+  disappointing: 1.5
+  disappointed: 1.5
+  frustrating: 1.5
+  frustrated: 1.5
+  annoying: 1.4
+  useless: 1.7
+  worthless: 1.8
+  waste: 1.5
+  garbage: 1.8
+  trash: 1.8
+  junk: 1.7
+  cheap: 1.2
+  flimsy: 1.4
+  fragile: 1.2
+  defective: 1.8
+  faulty: 1.7
+  malfunctioning: 1.8
+  unreliable: 1.5
+  unstable: 1.4
+  crash: 1.7
+  crashes: 1.7
+  crashing: 1.7
+  freeze: 1.5
+  freezes: 1.5
+  glitch: 1.5
+  glitchy: 1.5
+  laggy: 1.5
+  sluggish: 1.3
+  unresponsive: 1.6
+  clunky: 1.3
+  uncomfortable: 1.3
+  confusing: 1.2
+  complicated: 1.1
+  overpriced: 1.5
+  expensive: 1.2
+  ripoff: 1.8
+  scam: 1.8
+  misleading: 1.5
+  deceptive: 1.6
+  damaged: 1.6
+  leaked: 1.5
+  leaking: 1.5
+  cracked: 1.5
+  disgusting: 1.7
+  gross: 1.5
+  nasty: 1.5
+  rude: 1.5
+  unprofessional: 1.5
+  incompetent: 1.6
+  regret: 1.4
+  hate: 1.6
+  hated: 1.6
+  avoid: 1.5
+  underwhelming: 1.3
+  lackluster: 1.3
+  boring: 1.2
+  weak: 1.2
+  blurry: 1.4
+  distorted: 1.4
 
 forced_negative_any:
   - drain
   - draining
+  - defective
+  - malfunctioning
+  - malfunction
+  - scam
+  - ripoff
+  - counterfeit
+  - fake
 
 forced_negative_pairs:
   - [hard, find]
+  - [waste, money]
+  - [waste, time]
+  - [not, worth]
+  - [does, not, work]
+  - [stopped, working]
+  - [fell, apart]
+  - [broke, down]
 
 forced_negative_score: 0.82
 forced_pair_negative_score: 0.72
@@ -131,6 +505,40 @@ banned_aspect_tokens:
   - draining
   - drain
   - buggy
+  - thing
+  - things
+  - something
+  - anything
+  - everything
+  - nothing
+  - way
+  - time
+  - day
+  - year
+  - got
+  - get
+  - getting
+  - would
+  - could
+  - also
+  - even
+  - still
+  - just
+  - like
+  - one
+  - two
+  - first
+  - last
+  - new
+  - old
+  - use
+  - used
+  - using
+  - bought
+  - buy
+  - buying
+  - tried
+  - try
 
 preferred_features:
   - camera
@@ -152,6 +560,50 @@ preferred_features:
   - performance
   - design
   - screen
+  - display
+  - speaker
+  - speakers
+  - sound
+  - audio
+  - microphone
+  - keyboard
+  - mouse
+  - trackpad
+  - touchscreen
+  - charger
+  - charging
+  - cable
+  - port
+  - wifi
+  - bluetooth
+  - storage
+  - memory
+  - processor
+  - speed
+  - weight
+  - build
+  - material
+  - packaging
+  - shipping
+  - warranty
+  - software
+  - app
+  - interface
+  - setup
+  - installation
+  - durability
+  - comfort
+  - fit
+  - color
+  - brightness
+  - resolution
+  - volume
+  - connectivity
+  - range
+  - accuracy
+  - sensitivity
+  - responsiveness
+  - value
 
 bug_features:
   - bug
@@ -160,3 +612,17 @@ bug_features:
   - issues
   - problem
   - problems
+  - glitch
+  - glitches
+  - error
+  - errors
+  - crash
+  - crashes
+  - defect
+  - defects
+  - flaw
+  - flaws
+
+
+# Confidence threshold: predictions below this are labeled "neutral"
+neutral_confidence_threshold: 0.6
